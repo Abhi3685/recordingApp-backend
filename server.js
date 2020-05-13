@@ -1,7 +1,6 @@
 const express = require('express')
 const app = express()
 const port = 8000
-var multer = require('multer')
 var cors = require('cors')
 var bodyParser = require('body-parser')
 var fs = require('fs')
@@ -14,27 +13,7 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true, parameterLimit: 5
 // parse application/json
 app.use(bodyParser.json({ limit: "50mb" }))
 
-var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './uploads')
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname + '-' + Date.now() + '.mp4')
-    }
-})
-
-var upload = multer({ storage: storage }).single('file')
-
 app.post('/upload', (req, res) => {
-    // upload(req, res, function (err) {
-    //     if (err instanceof multer.MulterError) {
-    //         console.log("Err1: " + err);
-    //     } else if (err) {
-    //         console.log("Err2: " + err);
-    //     }
-    //     return res.status(200).send('Success!');
-    // })
-    // console.log(req.body.data);
     req.body.data = req.body.data.replace(/^data:(.*?);base64,/, "");
     req.body.data = req.body.data.replace(/ /g, '+');
 
