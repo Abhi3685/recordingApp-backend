@@ -17,14 +17,14 @@ app.post('/upload', (req, res) => {
     req.body.data = req.body.data.replace(/^data:(.*?);base64,/, "");
     req.body.data = req.body.data.replace(/ /g, '+');
 
-    fs.appendFile(`./uploads/userid-timestamp.mp4`, req.body.data, 'base64', function (err) {
+    fs.appendFile('./uploads/' + req.body.name, req.body.data, 'base64', function (err) {
         if (err) console.log(err);
     });
     res.status(200).send('Success!');
 })
 
 app.get('/video', function (req, res) {
-    const path = './uploads/userid-timestamp.mp4'
+    const path = './uploads/1-1589466481826.mp4'
     const stat = fs.statSync(path)
     const fileSize = stat.size
     const range = req.headers.range
