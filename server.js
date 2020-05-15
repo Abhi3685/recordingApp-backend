@@ -4,6 +4,9 @@ const port = 8000
 var cors = require('cors')
 var bodyParser = require('body-parser')
 var fs = require('fs')
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 app.use(cors())
 
@@ -21,6 +24,24 @@ app.post('/upload', (req, res) => {
         if (err) console.log(err);
     });
     res.status(200).send('Success!');
+})
+
+app.get('/test', (req, res) => {
+    var startTime = 10;
+    var endTime = 20;
+    var filename = 'sample.mp4';
+
+    ffmpeg('./uploads/' + filename)
+        .setStartTime(startTime)
+        .setDuration(endTime - startTime)
+        .output('./uploads/trim.mp4')
+        .on('error', function (err, stdout, stderr) {
+            res.send('Cannot process video: ' + err.message);
+        })
+        .on('end', function (stdout, stderr) {
+            res.send('Trimming succeeded !');
+        })
+        .run();
 })
 
 app.get('/video', function (req, res) {
