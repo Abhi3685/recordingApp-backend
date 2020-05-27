@@ -6,6 +6,18 @@ var bodyParser = require('body-parser')
 var fs = require('fs')
 const execFile = require('child_process').execFile;
 
+var storage = multer.diskStorage(
+    {
+        destination: './uploads/',
+        filename: function (req, file, cb) {
+            //req.body is empty...
+            //How could I get the new_file_name property sent from client here?
+            cb(null, file.originalname + ".png");
+        }
+    }
+);
+var upload = multer({ storage: storage });
+
 const cloudinary = require('cloudinary').v2
 cloudinary.config({
     cloud_name: 'dhhtvk50h',
@@ -83,23 +95,29 @@ app.post('/trim', (req, res) => {
     }
 })
 
-// app.get('/watermark', (req, res) => {
-//     const execFile = require('child_process').execFile;
-//     // const str = "overlay=10:10";
-//     // const str = "overlay=main_w/2-overlay_w/2-0+0:main_h/2-overlay_h/2-0+0";
-//     const child = execFile('ffmpeg', ['-i', "https://res.cloudinary.com/dhhtvk50h/video/upload/v1589968788/demo_r5ecap.mp4", '-i', './uploads/watermark.jpg', '-filter_complex', str, 'output.mp4'], (error, stdout, stderr) => {
-//         if (error) {
-//             console.error('stderr: =============================', stderr);
-//             throw error;
-//         }
-//         console.log('stdout: ==========================', stdout);
-//     });
+app.get('/watermark', upload.single('logo'), (req, res) => {
 
-//     console.log('here');
+    sharp("./uploads/" + req.body.userId + ".png")
+        .resize({ width: 300 })
+        .toFile("./uploads/" + req.body.userId + "-2.png")
+        .then(() => {
+            fs.unlink("./uploads/" + req.body.userId + ".png", () => { });
+            // Add New Logo To Video
+            // const str = "overlay=main_w-overlay_w-10:main_h-overlay_h-10";
+            // const str = "overlay=10:10";
+            // const str = "overlay=main_w/2-overlay_w/2-0+0:main_h/2-overlay_h/2-0+0";
+            const str = "[0:v]setsar=sar=1[v];[v][1]blend=all_mode='overlay':all_opacity=0.7";
+            execFile('ffmpeg', ['-i', req.body.vid_url, '-i', "./uploads/" + req.body.userId + "-2.png", '-filter_complex', str, "./uploads/" + req.body.userId + ".mp4"], (error, stdout, stderr) => {
+                if (error) res.send(error);
+                // Upload new video to cloudinary
+                fs.unlink("./uploads/" + req.body.userId + "-2.png", () => { });
+                res.send('Success!!');
+            });
+        });
 
-//     // ffmpeg -i "https://res.cloudinary.com/dhhtvk50h/video/upload/v1589968788/demo_r5ecap.mp4" 
-//     // -i ./uploads/watermark.jpg -filter_complex "overlay=main_w/2-overlay_w/2-0+0:main_h/2-overlay_h/2-0+0" ./video-watermark.mp4
-// })
+    // ffmpeg -i "https://res.cloudinary.com/dhhtvk50h/video/upload/v1589968788/demo_r5ecap.mp4" 
+    // -i ./uploads/watermark.jpg -filter_complex "overlay=main_w/2-overlay_w/2-0+0:main_h/2-overlay_h/2-0+0" ./video-watermark.mp4
+})
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
