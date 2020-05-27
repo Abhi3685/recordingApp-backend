@@ -2,6 +2,8 @@ const express = require('express')
 const app = express()
 const port = 8000
 var cors = require('cors')
+var multer = require('multer')
+var sharp = require('sharp')
 var bodyParser = require('body-parser')
 var fs = require('fs')
 const execFile = require('child_process').execFile;
@@ -95,28 +97,32 @@ app.post('/trim', (req, res) => {
     }
 })
 
-app.get('/watermark', upload.single('logo'), (req, res) => {
+app.post('/watermark', upload.single('logo'), (req, res) => {
 
     sharp("./uploads/" + req.body.userId + ".png")
-        .resize({ width: 300 })
+        .resize({ width: 200 })
         .toFile("./uploads/" + req.body.userId + "-2.png")
         .then(() => {
             fs.unlink("./uploads/" + req.body.userId + ".png", () => { });
             // Add New Logo To Video
-            // const str = "overlay=main_w-overlay_w-10:main_h-overlay_h-10";
-            // const str = "overlay=10:10";
-            // const str = "overlay=main_w/2-overlay_w/2-0+0:main_h/2-overlay_h/2-0+0";
-            const str = "[0:v]setsar=sar=1[v];[v][1]blend=all_mode='overlay':all_opacity=0.7";
-            execFile('ffmpeg', ['-i', req.body.vid_url, '-i', "./uploads/" + req.body.userId + "-2.png", '-filter_complex', str, "./uploads/" + req.body.userId + ".mp4"], (error, stdout, stderr) => {
-                if (error) res.send(error);
-                // Upload new video to cloudinary
+            const str = "[1]lut=a=val*0.8[a];[0][a]overlay=main_w-overlay_w-20:main_h-overlay_h-30";
+            execFile('ffmpeg', ['-i', req.body.vid_url, '-i', "./uploads/" + req.body.userId + "-2.png", '-filter_complex', str, '-preset', "ultrafast", '-c:a', 'copy', "./uploads/" + req.body.userId + ".mp4"], (error, stdout, stderr) => {
+                if (error) return res.send(error);
                 fs.unlink("./uploads/" + req.body.userId + "-2.png", () => { });
-                res.send('Success!!');
+                // Upload new video to cloudinary
+                cloudinary.api.delete_resources([req.body.pid],
+                    { resource_type: "video" }
+                );
+                cloudinary.uploader.upload('./uploads/' + req.body.userId + '.mp4',
+                    { resource_type: "video" },
+                    function (err, video) {
+                        if (err) return res.send(err)
+                        fs.unlink('./uploads/' + req.body.userId + '.mp4', () => { });
+                        res.send({ ...video, code: 'Success' });
+                    });
             });
         });
 
-    // ffmpeg -i "https://res.cloudinary.com/dhhtvk50h/video/upload/v1589968788/demo_r5ecap.mp4" 
-    // -i ./uploads/watermark.jpg -filter_complex "overlay=main_w/2-overlay_w/2-0+0:main_h/2-overlay_h/2-0+0" ./video-watermark.mp4
 })
 
 app.get('/', (req, res) => {
