@@ -2,20 +2,20 @@ const express = require('express')
 const app = express()
 const port = 8000
 var cors = require('cors')
-var multer = require('multer')
+// var multer = require('multer')
 var bodyParser = require('body-parser')
 var fs = require('fs')
 const execFile = require('child_process').execFile;
 
-var storage = multer.diskStorage(
-    {
-        destination: './uploads/',
-        filename: function (req, file, cb) {
-            cb(null, file.originalname + ".png");
-        }
-    }
-);
-var upload = multer({ storage: storage });
+// var storage = multer.diskStorage(
+//     {
+//         destination: './uploads/',
+//         filename: function (req, file, cb) {
+//             cb(null, file.originalname + ".png");
+//         }
+//     }
+// );
+// var upload = multer({ storage: storage });
 
 const cloudinary = require('cloudinary').v2
 cloudinary.config({
@@ -25,6 +25,7 @@ cloudinary.config({
 })
 
 app.use(cors())
+app.use(express.static('subtitles'))
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true, parameterLimit: 50000 }))
@@ -94,7 +95,14 @@ app.post('/trim', (req, res) => {
     }
 })
 
+app.post('/subtitle', (req, res) => {
+    var { file, text } = req.body;
+    fs.writeFileSync("./subtitles/" + file, text);
+    res.send("Success!");
+})
+
 app.get('/', (req, res) => {
+    fs.writeFileSync("./subtitles/sub-123456789.vtt", "WEBVTT\n\n00:00:02.000 --> 00:00:05.000\nSample Text as Subtitle");
     res.send('Hello World!');
 })
 
