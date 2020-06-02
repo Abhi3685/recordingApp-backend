@@ -37,7 +37,7 @@ app.post('/trim', (req, res) => {
     var { userId, lowerLimit, upperLimit, duration, url, pid } = req.body;
 
     if (lowerLimit == 0) {
-        execFile('ffmpeg', ['-i', url, '-ss', upperLimit, '-t', duration - upperLimit, '-c', 'copy', './temp/' + userId + '-final.mp4'], (error) => {
+        execFile('ffmpeg', ['-ss', upperLimit, '-i', url, '-t', duration - upperLimit, '-c', 'copy', './temp/' + userId + '-final.mp4'], (error) => {
             if (error) return res.send(error);
             cloudinary.api.delete_resources([pid],
                 { resource_type: "video" }
@@ -51,7 +51,7 @@ app.post('/trim', (req, res) => {
                 });
         });
     } else if (upperLimit == duration) {
-        execFile('ffmpeg', ['-i', url, '-ss', 0, '-t', lowerLimit, '-c', 'copy', './temp/' + userId + '-final.mp4'], (error) => {
+        execFile('ffmpeg', ['-ss', 0, '-i', url, '-t', lowerLimit, '-c', 'copy', './temp/' + userId + '-final.mp4'], (error) => {
             if (error) return res.send(error);
 
             cloudinary.api.delete_resources([pid],
@@ -66,9 +66,9 @@ app.post('/trim', (req, res) => {
                 });
         });
     } else {
-        execFile('ffmpeg', ['-i', url, '-ss', 0, '-t', lowerLimit, '-c', 'copy', './temp/' + userId + '-p1.mp4'], (error) => {
+        execFile('ffmpeg', ['-ss', 0, '-i', url, '-t', lowerLimit, '-c', 'copy', './temp/' + userId + '-p1.mp4'], (error) => {
             if (error) return res.send(error);
-            execFile('ffmpeg', ['-i', url, '-ss', upperLimit, '-t', duration - upperLimit, '-c', 'copy', './temp/' + userId + '-p2.mp4'], (error) => {
+            execFile('ffmpeg', ['-ss', upperLimit, '-i', url, '-t', duration - upperLimit, '-c', 'copy', './temp/' + userId + '-p2.mp4'], (error) => {
                 if (error) return res.send(error);
 
                 fs.writeFile("./temp/" + userId + '.txt', "file '" + userId + '-p1.mp4' + "'\nfile '" + userId + '-p2.mp4' + "'", function (err) {
@@ -102,7 +102,6 @@ app.post('/subtitle', (req, res) => {
 })
 
 app.get('/', (req, res) => {
-    fs.writeFileSync("./subtitles/sub-123456789.vtt", "WEBVTT\n\n00:00:02.000 --> 00:00:05.000\nSample Text as Subtitle");
     res.send('Hello World!');
 })
 
