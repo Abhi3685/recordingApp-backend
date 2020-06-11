@@ -101,6 +101,29 @@ app.post('/subtitle', (req, res) => {
     res.send("Success!");
 })
 
+app.delete('/video/:videoId', (req, res) => {
+    var publicId = req.params.videoId;
+    cloudinary.api.delete_resources([publicId],
+        { resource_type: "video" }
+    );
+    res.send('Success!');
+})
+
+app.post("/deletepost", (req, res) => {
+    req.body.attachments.forEach(attachment => {
+        var parts = attachment.split("/");
+        parts = parts[parts.length - 1].split(".");
+        if (parts[1] === 'jpg' || parts[1] === 'png') {
+            cloudinary.api.delete_resources([parts[0]]);
+        } else {
+            cloudinary.api.delete_resources([parts[0]],
+                { resource_type: "video" }
+            );
+        }
+    });
+    res.send('Success!');
+})
+
 app.get('/', (req, res) => {
     res.send('Hello World!');
 })
