@@ -2,20 +2,9 @@ const express = require('express')
 const app = express()
 const port = 8000
 var cors = require('cors')
-// var multer = require('multer')
 var bodyParser = require('body-parser')
 var fs = require('fs')
 const execFile = require('child_process').execFile;
-
-// var storage = multer.diskStorage(
-//     {
-//         destination: './uploads/',
-//         filename: function (req, file, cb) {
-//             cb(null, file.originalname + ".png");
-//         }
-//     }
-// );
-// var upload = multer({ storage: storage });
 
 const cloudinary = require('cloudinary').v2
 cloudinary.config({
