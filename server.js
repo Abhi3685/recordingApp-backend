@@ -26,54 +26,54 @@ app.post('/trim', (req, res) => {
     var { userId, lowerLimit, upperLimit, duration, url, pid } = req.body;
 
     if (lowerLimit == 0) {
-        execFile('ffmpeg', ['-ss', upperLimit, '-i', url, '-t', duration - upperLimit, '-c', 'copy', './temp/' + userId + '-final.mp4'], (error) => {
+        execFile('ffmpeg', ['-ss', upperLimit, '-i', url, '-t', duration - upperLimit, '-c', 'copy', './temp/' + userId + '-final.mkv'], (error) => {
             if (error) return res.send(error);
-            cloudinary.api.delete_resources([pid],
-                { resource_type: "video" }
-            );
-            cloudinary.uploader.upload('./temp/' + userId + '-final.mp4',
+            cloudinary.uploader.upload('./temp/' + userId + '-final.mkv',
                 { resource_type: "video" },
                 function (err, video) {
                     if (err) return res.send(err)
-                    fs.unlinkSync('./temp/' + userId + '-final.mp4')
+                    fs.unlinkSync('./temp/' + userId + '-final.mkv')
                     res.send({ ...video, code: 'Success' });
                 });
+            cloudinary.api.delete_resources([pid],
+                { resource_type: "video" }
+            );
         });
     } else if (upperLimit == duration) {
-        execFile('ffmpeg', ['-ss', 0, '-i', url, '-t', lowerLimit, '-c', 'copy', './temp/' + userId + '-final.mp4'], (error) => {
+        execFile('ffmpeg', ['-ss', 0, '-i', url, '-t', lowerLimit, '-c', 'copy', './temp/' + userId + '-final.mkv'], (error) => {
             if (error) return res.send(error);
 
             cloudinary.api.delete_resources([pid],
                 { resource_type: "video" }
             );
-            cloudinary.uploader.upload('./temp/' + userId + '-final.mp4',
+            cloudinary.uploader.upload('./temp/' + userId + '-final.mkv',
                 { resource_type: "video" },
                 function (err, video) {
                     if (err) return res.send(err)
-                    fs.unlinkSync('./temp/' + userId + '-final.mp4')
+                    fs.unlinkSync('./temp/' + userId + '-final.mkv')
                     res.send({ ...video, code: 'Success' });
                 });
         });
     } else {
-        execFile('ffmpeg', ['-ss', 0, '-i', url, '-t', lowerLimit, '-c', 'copy', './temp/' + userId + '-p1.mp4'], (error) => {
+        execFile('ffmpeg', ['-ss', 0, '-i', url, '-t', lowerLimit, '-c', 'copy', './temp/' + userId + '-p1.mkv'], (error) => {
             if (error) return res.send(error);
-            execFile('ffmpeg', ['-ss', upperLimit, '-i', url, '-t', duration - upperLimit, '-c', 'copy', './temp/' + userId + '-p2.mp4'], (error) => {
+            execFile('ffmpeg', ['-ss', upperLimit, '-i', url, '-t', duration - upperLimit, '-c', 'copy', './temp/' + userId + '-p2.mkv'], (error) => {
                 if (error) return res.send(error);
 
-                fs.writeFile("./temp/" + userId + '.txt', "file '" + userId + '-p1.mp4' + "'\nfile '" + userId + '-p2.mp4' + "'", function (err) {
+                fs.writeFile("./temp/" + userId + '.txt', "file '" + userId + '-p1.mkv' + "'\nfile '" + userId + '-p2.mkv' + "'", function (err) {
                     if (err) return res.send(err);
-                    execFile('ffmpeg', ['-f', 'concat', '-i', './temp/' + userId + '.txt', '-c', 'copy', './temp/' + userId + '-final.mp4'], (error) => {
+                    execFile('ffmpeg', ['-f', 'concat', '-i', './temp/' + userId + '.txt', '-c', 'copy', './temp/' + userId + '-final.mkv'], (error) => {
                         if (error) return res.send(error);
                         cloudinary.api.delete_resources([pid],
                             { resource_type: "video" }
                         );
-                        cloudinary.uploader.upload('./temp/' + userId + '-final.mp4',
+                        cloudinary.uploader.upload('./temp/' + userId + '-final.mkv',
                             { resource_type: "video" },
                             function (err, video) {
                                 if (err) return res.send(err)
-                                fs.unlinkSync('./temp/' + userId + '-final.mp4')
-                                fs.unlinkSync('./temp/' + userId + '-p1.mp4')
-                                fs.unlinkSync('./temp/' + userId + '-p2.mp4')
+                                fs.unlinkSync('./temp/' + userId + '-final.mkv')
+                                fs.unlinkSync('./temp/' + userId + '-p1.mkv')
+                                fs.unlinkSync('./temp/' + userId + '-p2.mkv')
                                 fs.unlinkSync('./temp/' + userId + '.txt')
                                 res.send({ ...video, code: 'Success' });
                             });
@@ -114,7 +114,14 @@ app.post("/deletepost", (req, res) => {
 })
 
 app.get('/', (req, res) => {
-    res.send('Hello World!');
+    cloudinary.uploader.upload('./temp/xyz-final.mkv',
+        { resource_type: "video" },
+        function (err, video) {
+            if (err) return res.send(err)
+            // fs.unlinkSync('./temp/' + userId + '-final.mp4')
+            res.send({ ...video, code: 'Success' });
+        });
+    // res.send('Hello World!');
 })
 
 app.listen(port, () => console.log(`Server listening at http://localhost:${port}`))
