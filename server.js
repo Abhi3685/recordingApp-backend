@@ -1,6 +1,7 @@
 const express = require('express')
+const path = require('path');
 const app = express()
-const port = 8000
+const port = process.env.PORT || 8000
 var cors = require('cors')
 var bodyParser = require('body-parser')
 var fs = require('fs')
@@ -15,14 +16,12 @@ cloudinary.config({
 
 app.use(cors())
 app.use(express.static('subtitles'))
+app.use(express.static(path.join(__dirname, 'build')));
 
-// parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true, parameterLimit: 50000 }))
-
-// parse application/json
 app.use(bodyParser.json({ limit: "50mb" }))
 
-app.post('/trim', (req, res) => {
+app.post('/api/trim', (req, res) => {
     var { userId, lowerLimit, upperLimit, duration, url, pid } = req.body;
 
     if (lowerLimit == 0) {
@@ -84,13 +83,13 @@ app.post('/trim', (req, res) => {
     }
 })
 
-app.post('/subtitle', (req, res) => {
+app.post('/api/subtitle', (req, res) => {
     var { file, text } = req.body;
     fs.writeFileSync("./subtitles/" + file, text);
     res.send("Success!");
 })
 
-app.delete('/video/:videoId', (req, res) => {
+app.delete('/api/video/:videoId', (req, res) => {
     var publicId = req.params.videoId;
     cloudinary.api.delete_resources([publicId],
         { resource_type: "video" }
@@ -98,30 +97,8 @@ app.delete('/video/:videoId', (req, res) => {
     res.send('Success!');
 })
 
-app.post("/deletepost", (req, res) => {
-    req.body.attachments.forEach(attachment => {
-        var parts = attachment.split("/");
-        parts = parts[parts.length - 1].split(".");
-        if (parts[1] === 'jpg' || parts[1] === 'png') {
-            cloudinary.api.delete_resources([parts[0]]);
-        } else {
-            cloudinary.api.delete_resources([parts[0]],
-                { resource_type: "video" }
-            );
-        }
-    });
-    res.send('Success!');
-})
-
-app.get('/', (req, res) => {
-    cloudinary.uploader.upload('./temp/xyz-final.mkv',
-        { resource_type: "video" },
-        function (err, video) {
-            if (err) return res.send(err)
-            // fs.unlinkSync('./temp/' + userId + '-final.mp4')
-            res.send({ ...video, code: 'Success' });
-        });
-    // res.send('Hello World!');
-})
+app.get('/*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 app.listen(port, () => console.log(`Server listening at http://localhost:${port}`))
