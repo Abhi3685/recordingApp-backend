@@ -86,6 +86,7 @@ app.post('/api/trim', (req, res) => {
 app.post('/api/subtitle', (req, res) => {
     var { file, text } = req.body;
     fs.writeFileSync("./subtitles/" + file, text);
+
     cloudinary.uploader.upload('./subtitles/' + file,
         { resource_type: "raw", public_id: "sub_" + file },
         function (err, result) {
