@@ -86,7 +86,13 @@ app.post('/api/trim', (req, res) => {
 app.post('/api/subtitle', (req, res) => {
     var { file, text } = req.body;
     fs.writeFileSync("./subtitles/" + file, text);
-    res.send("Success!");
+    cloudinary.uploader.upload('./subtitles/' + file,
+        { resource_type: "raw", public_id: "sub_" + file },
+        function (err, result) {
+            if (err) return res.send(err);
+            fs.unlink('./subtitles/' + file, () => { });
+            res.send({ ...result, code: 'Success' });
+        });
 })
 
 app.delete('/api/video/:videoId', (req, res) => {
